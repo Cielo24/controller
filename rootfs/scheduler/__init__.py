@@ -212,6 +212,25 @@ class KubeHTTPClient(object):
 
         return response
 
+    def http_patch(self, path, data=None, merge_type='merge-patch', **kwargs):
+        """
+        Make a PUT request to the k8s server.
+        """
+        try:
+            url = urljoin(self.url, path)
+            headers = kwargs.pop('headers', {})
+            headers.setdefault('Content-Type', 'application/{}+json'.format(merge_type))
+            response = self.session.patch(url, data=data, headers=headers, **kwargs)
+        except requests.exceptions.ConnectionError as err:
+            # reraise as KubeException, but log stacktrace.
+            message = "There was a problem putting data to " \
+                      "the Kubernetes API server. URL: {}, " \
+                      "data: {}".format(url, data)
+            logger.error(message)
+            raise KubeException(message) from err
+
+        return response
+
     def http_delete(self, path, **kwargs):
         """
         Make a DELETE request to the k8s server.
@@ -270,6 +289,8 @@ class KubeHTTPClient(object):
                     namespace, name, image, entrypoint, command, **kwargs
                 )
             except KubeException as e:
+                if 'Insufficient' in str(e):
+                    return
                 raise KubeException(
                     'There was a problem while deploying {} of {}-{}. '
                     "Additional information:\n{}".format(version, namespace, app_type, str(e))

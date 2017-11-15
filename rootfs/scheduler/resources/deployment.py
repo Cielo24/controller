@@ -30,7 +30,7 @@ class Deployment(Resource):
 
         return response
 
-    def manifest(self, namespace, name, image, entrypoint, command, **kwargs):
+    def manifest(self, namespace, name, image, entrypoint, command, update=False, **kwargs):
         replicas = kwargs.get('replicas', 0)
         batches = kwargs.get('deploy_batches', None)
         tags = kwargs.get('tags', {})
@@ -58,6 +58,9 @@ class Deployment(Resource):
                 }
             }
         }
+
+        if update:
+            del manifest['spec']['replicas']
 
         # Add in Rollback (if asked for)
         rollback = kwargs.get('rollback', False)
@@ -126,10 +129,10 @@ class Deployment(Resource):
 
     def update(self, namespace, name, image, entrypoint, command, **kwargs):
         manifest = self.manifest(namespace, name, image,
-                                 entrypoint, command, **kwargs)
+                                 entrypoint, command, update=True, **kwargs)
 
         url = self.api("/namespaces/{}/deployments/{}", namespace, name)
-        response = self.http_put(url, json=manifest)
+        response = self.http_patch(url, json=manifest)
         if self.unhealthy(response.status_code):
             self.log(namespace, 'template: {}'.format(json.dumps(manifest, indent=4)), 'DEBUG')
             raise KubeHTTPException(response, 'update Deployment "{}"', name)
@@ -157,19 +160,11 @@ class Deployment(Resource):
         """
         deployment = self.deployment.get(namespace, name).json()
         desired = int(kwargs.get('replicas'))
-        current = int(deployment['spec']['replicas'])
-        if desired == current:
-            self.log(namespace, "Not scaling Deployment {} to {} replicas. Already at desired replicas".format(name, desired))  # noqa
-            return
-        elif desired != current:
-            self.log(namespace, "scaling Deployment {} from {} to {} replicas".format(name, current, desired))  # noqa
-            self.scales.update(namespace, name, desired, deployment)
+        self.log(namespace, "scaling Deployment {} from {} to {} replicas".format(name, current, desired))  # noqa
+        self.scales.update(namespace, name, desired, deployment)
 
-            # wait until scaling is done
-            self.wait_until_updated(namespace, name)
-            # set the previous replicas count so the wait logic can deal with terminating pods
-            kwargs['previous_replicas'] = current
-            self.wait_until_ready(namespace, name, **kwargs)
+        # wait until scaling is done
+        self.wait_until_updated(namespace, name)
 
     def in_progress(self, namespace, name, timeout, batches, replicas, tags):
         """
