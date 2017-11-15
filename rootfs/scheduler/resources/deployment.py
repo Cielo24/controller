@@ -160,7 +160,7 @@ class Deployment(Resource):
         """
         deployment = self.deployment.get(namespace, name).json()
         desired = int(kwargs.get('replicas'))
-        self.log(namespace, "scaling Deployment {} from {} to {} replicas".format(name, current, desired))  # noqa
+        self.log(namespace, "scaling Deployment {} to {} replicas".format(name, desired))  # noqa
         self.scales.update(namespace, name, desired, deployment)
 
         # wait until scaling is done
