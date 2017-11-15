@@ -223,7 +223,7 @@ class KubeHTTPClient(object):
             response = self.session.patch(url, data=data, headers=headers, **kwargs)
         except requests.exceptions.ConnectionError as err:
             # reraise as KubeException, but log stacktrace.
-            message = "There was a problem putting data to " \
+            message = "There was a problem patching data to " \
                       "the Kubernetes API server. URL: {}, " \
                       "data: {}".format(url, data)
             logger.error(message)
