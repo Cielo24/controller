@@ -576,6 +576,7 @@ class App(UuidAuditedModel):
         release.cleanup_old()
 
     def _check_deployment_in_progress(self, deploys, force_deploy=False):
+        return
         if force_deploy:
             return
         for scale_type, kwargs in deploys.items():
