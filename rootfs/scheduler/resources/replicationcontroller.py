@@ -100,11 +100,12 @@ class ReplicationController(Resource):
         # Double check enough pods are in the required state to service the application
         labels = rc['metadata']['labels']
         containers = rc['spec']['template']['spec']['containers']
-        self.pods.wait_until_ready(namespace, containers, labels, desired, timeout)
+        #self.pods.wait_until_ready(namespace, containers, labels, desired, timeout)
 
         # if it was a scale down operation, wait until terminating pods are done
         if int(desired) < int(current):
-            self.pods.wait_until_terminated(namespace, labels, current, desired)
+            #self.pods.wait_until_terminated(namespace, labels, current, desired)
+            pass
 
     def wait_until_updated(self, namespace, name):
         """
