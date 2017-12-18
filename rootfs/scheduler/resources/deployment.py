@@ -298,6 +298,9 @@ class Deployment(Resource):
 
         Deals with the wait time, timesout and more
         """
+
+        return
+
         replicas = int(kwargs.get('replicas', 0))
         # If desired is 0 then there is no ready state to check on
         if replicas == 0:
