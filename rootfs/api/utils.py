@@ -156,7 +156,7 @@ def async_run(tasks):
     # start a new async event loop
     loop = asyncio.get_event_loop()
     # https://github.com/python/asyncio/issues/258
-    executor = concurrent.futures.ThreadPoolExecutor(5)
+    executor = concurrent.futures.ThreadPoolExecutor(20)
     loop.set_default_executor(executor)
 
     async_tasks = [asyncio.ensure_future(async_task(task, loop)) for task in tasks]
